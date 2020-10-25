@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -61,10 +62,12 @@ func main() {
 }
 
 func printCSV(headers []string, stats []Stats) {
-	fmt.Println(strings.Join(headers, ","))
+	w := csv.NewWriter(os.Stdout)
+	w.Write(headers)
 	for _, v := range stats {
-		fmt.Printf("%s,%s,%s,%s,%s\n", v.NameEmail, v.Counts[_commits], v.Counts[_additions], v.Counts[_deletions], v.Counts[_files])
+		w.Write([]string{v.NameEmail, v.Counts[_commits], v.Counts[_additions], v.Counts[_deletions], v.Counts[_files]})
 	}
+	w.Flush()
 }
 
 func printJSON(headers []string, stats []Stats) {
