@@ -31,7 +31,9 @@ type Stats struct {
 }
 
 func main() {
-	outputType := flag.String("output", "table", "output type: csv/json/table (default is table)")
+	var outputType string
+	flag.StringVar(&outputType, "output", "table", "output type: csv/json/table (default is table)")
+	flag.StringVar(&outputType, "o", "table", "output type: csv/json/table (default is table)")
 
 	flag.Usage = func() {
 		fmt.Printf("Print the stats of all contributors of a git repository.\n")
@@ -49,7 +51,7 @@ func main() {
 	stats := findCommits()
 	stats = findContributorStats(stats)
 
-	switch *outputType {
+	switch outputType {
 	case "table":
 		printTable(_headers, stats)
 	case "csv":
