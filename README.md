@@ -4,7 +4,7 @@ A CLI wrapper around git commands to get contributors stats of a repo for all br
 ## Usage
 Supported output formats are table/JSON/CSV. Default output format is table.
 
-## Example
+### Example
 Running for a local copy of https://github.com/nshepperd/gpt-2.git.
 ```bash
 $ git remote -v
@@ -93,4 +93,11 @@ $ gitstats -o table
 | stephan orlowsky                               |       1 |         6 |         0 |     1 |
 | <stephan.orlowsky@aperto.com>                  |         |           |           |       |
 +------------------------------------------------+---------+-----------+-----------+-------+
+```
+
+## Installation
+
+### Using Go
+```bash
+go get -v -u github.com/heisantosh/gitstats
 ```
