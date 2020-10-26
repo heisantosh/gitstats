@@ -1,3 +1,5 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/heisantosh/gitstats)](https://goreportcard.com/report/github.com/heisantosh/gitstats)
+
 # gitstat
 A CLI wrapper around git commands to get contributors stats of a repo for all branches.
 
