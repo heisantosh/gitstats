@@ -27,6 +27,7 @@ var (
 // Stats represents git activity stats of a contributor.
 type Stats struct {
 	NameEmail string
+	FileNames map[string]struct{}
 	Counts    map[string]string
 }
 
@@ -35,21 +36,29 @@ func main() {
 	flag.StringVar(&outputType, "output", "table", "output type: csv/json/table (default is table)")
 	flag.StringVar(&outputType, "o", "table", "output type: csv/json/table (default is table)")
 
+	mergeNameFlag := flag.Bool("merge-name", false, "merge contributor stats with same email username")
+
 	flag.Usage = func() {
 		fmt.Printf("Print the stats of all contributors of a git repository.\n")
 		fmt.Printf("The command must be run in a git repository.\n\n")
 		fmt.Printf("Usage:\n\n\t%v\n\n", "gitstats [options]")
-		fmt.Printf("The options are:\n\n")
-		flag.VisitAll(func(f *flag.Flag) {
-			fmt.Printf("\t-%v\n", f.Name)
-			fmt.Printf("\t\t%v\n", f.Usage)
-		})
+		fmt.Println(`The options are:
+	-output, -o
+		output type: csv/json/table (default is table)
+
+The flags are:
+	-merge-name
+		merge contributor stats with same email username`)
 	}
 
 	flag.Parse()
 
 	stats := findCommits()
 	stats = findContributorStats(stats)
+
+	if *mergeNameFlag {
+		stats = mergeNames(stats)
+	}
 
 	switch outputType {
 	case "table":
@@ -109,7 +118,7 @@ func findCommits() []Stats {
 	// line format: <number of commits> <Name email>
 	// e.g.: 20 Peter Quill <starlord@gotg.space>
 	for _, line := range lines {
-		x := Stats{Counts: make(map[string]string)}
+		x := Stats{FileNames: make(map[string]struct{}, 0), Counts: make(map[string]string)}
 		line = strings.TrimSpace(line)
 		if line == "" {
 			break
@@ -188,10 +197,65 @@ func findContributorStats(stats []Stats) []Stats {
 			fileNames[line] = struct{}{}
 		}
 
+		stats[i].FileNames = fileNames
 		stats[i].Counts[_additions] = strconv.Itoa(additions)
 		stats[i].Counts[_deletions] = strconv.Itoa(deletions)
 		stats[i].Counts[_files] = strconv.Itoa(len(fileNames))
 	}
 
 	return stats
+}
+
+func mergeNames(stats []Stats) []Stats {
+	m := make(map[string][]Stats)
+
+	for _, v := range stats {
+		userName := findUserName(v.NameEmail)
+		if _, ok := m[userName]; !ok {
+			m[userName] = make([]Stats, 0)
+		}
+
+		m[userName] = append(m[userName], v)
+	}
+
+	mergedStats := make([]Stats, 0)
+	for _, v := range m {
+		x := Stats{FileNames: make(map[string]struct{}), Counts: make(map[string]string)}
+
+		// commits, additions, deletions
+		c, a, d := 0, 0, 0
+		// filenames
+		fm := make(map[string]struct{})
+		nameEmails := make([]string, 0)
+		for _, w := range v {
+			i, _ := strconv.Atoi(w.Counts[_commits])
+			c += i
+			i, _ = strconv.Atoi(w.Counts[_additions])
+			a += i
+			i, _ = strconv.Atoi(w.Counts[_deletions])
+			d += i
+
+			for name := range w.FileNames {
+				fm[name] = struct{}{}
+			}
+
+			nameEmails = append(nameEmails, w.NameEmail)
+		}
+
+		x.NameEmail = strings.Join(nameEmails, "; ")
+		x.Counts[_commits] = strconv.Itoa(c)
+		x.Counts[_additions] = strconv.Itoa(a)
+		x.Counts[_deletions] = strconv.Itoa(d)
+		x.Counts[_files] = strconv.Itoa(len(fm))
+
+		mergedStats = append(mergedStats, x)
+	}
+
+	return mergedStats
+}
+
+func findUserName(nameEmail string) string {
+	parts := strings.Split(strings.TrimSpace(nameEmail), "<")
+	parts = strings.Split(strings.TrimSpace(parts[1]), "@")
+	return strings.ToLower(strings.TrimSpace(parts[0]))
 }
