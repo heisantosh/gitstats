@@ -20,14 +20,24 @@ const (
 	_commits   = "Commits"
 	_files     = "Files"
 
-	_outputUsage  = "output type: csv/json/table (default is table)"
-	_mergeIDUsage = "merge contributor stats with same email username"
-	_sortByUsage  = `sort by: commits,additions,deletions,files (default is commits)
-		accepts multiple values separated by commas, sort is stable
-		sort is applied in the given order left to right`
+	_outputTypeTable = "table"
+	_outputTypeJSON  = "json"
+	_outputTypeCSV   = "csv"
+
+	_sortByCommits   = "commits"
+	_sortByAdditions = "additions"
+	_sortByDeletions = "deletions"
+	_sortByFiles     = "files"
+
+	_outputUsage    = "output type: " + _outputTypeTable + "/" + _outputTypeCSV + "/" + _outputTypeJSON + "(default is " + _outputTypeTable + ")"
+	_mergeNameUsage = "merge contributor stats with same email username"
 )
 
 var (
+	_sortByUsage = `sort by: ` + strings.Join([]string{_sortByCommits, _sortByAdditions, _sortByDeletions, _sortByDeletions}, ",") + `
+		accepts multiple values separated by commas, sort is stable
+		sort is applied in the given order left to right`
+
 	_headers = []string{"Contributor", "Commits", "Additions", "Deletions", "Files"}
 )
 
@@ -40,10 +50,10 @@ type Stats struct {
 
 func main() {
 	var outputType string
-	flag.StringVar(&outputType, "output", "table", _outputUsage)
-	flag.StringVar(&outputType, "o", "table", _outputUsage)
+	flag.StringVar(&outputType, "output", _outputTypeTable, _outputUsage)
+	flag.StringVar(&outputType, "o", _outputTypeTable, _outputUsage)
 
-	mergeNameFlag := flag.Bool("merge-name", false, _mergeIDUsage)
+	mergeNameFlag := flag.Bool("merge-name", false, _mergeNameUsage)
 
 	var sortBy string
 	flag.StringVar(&sortBy, "sort-by", "commits", _sortByUsage)
@@ -54,14 +64,17 @@ func main() {
 		fmt.Printf("The command must be run in a git repository.\n\n")
 		fmt.Printf("Usage:\n\n\t%v\n\n", "gitstats [options]")
 		fmt.Println(`The options are:
+
 	-output, -o
 		` + _outputUsage + `
+
 	-sort-by, -s
 		` + _sortByUsage + `
 
 The flags are:
+
 	-merge-name
-		` + _mergeIDUsage)
+		` + _mergeNameUsage)
 	}
 
 	flag.Parse()
@@ -81,11 +94,11 @@ The flags are:
 	stats = sortStats(sortBy, stats)
 
 	switch outputType {
-	case "table":
+	case _outputTypeTable:
 		printTable(_headers, stats)
-	case "csv":
+	case _outputTypeCSV:
 		printCSV(_headers, stats)
-	case "json":
+	case _outputTypeJSON:
 		printJSON(_headers, stats)
 	default:
 		printTable(_headers, stats)
@@ -297,7 +310,7 @@ func sortStats(sortBy string, stats []Stats) []Stats {
 	// last one wins
 	for _, v := range sortFields {
 		switch v {
-		case "commits":
+		case _sortByCommits:
 			sort.SliceStable(stats,
 				func(i, j int) bool {
 					a, _ := strconv.Atoi(stats[i].Counts[_commits])
@@ -305,7 +318,7 @@ func sortStats(sortBy string, stats []Stats) []Stats {
 					return a > b
 				},
 			)
-		case "additions":
+		case _sortByAdditions:
 			sort.SliceStable(stats,
 				func(i, j int) bool {
 					a, _ := strconv.Atoi(stats[i].Counts[_additions])
@@ -313,7 +326,7 @@ func sortStats(sortBy string, stats []Stats) []Stats {
 					return a > b
 				},
 			)
-		case "deletions":
+		case _sortByDeletions:
 			sort.SliceStable(stats,
 				func(i, j int) bool {
 					a, _ := strconv.Atoi(stats[i].Counts[_deletions])
@@ -321,7 +334,7 @@ func sortStats(sortBy string, stats []Stats) []Stats {
 					return a > b
 				},
 			)
-		case "files":
+		case _sortByFiles:
 			sort.SliceStable(stats,
 				func(i, j int) bool {
 					a, _ := strconv.Atoi(stats[i].Counts[_files])
