@@ -296,7 +296,7 @@ func sortStats(sortBy string, stats []Stats) []Stats {
 	for _, v := range sortFields {
 		switch v {
 		case "commits":
-			sort.Slice(stats,
+			sort.SliceStable(stats,
 				func(i, j int) bool {
 					a, _ := strconv.Atoi(stats[i].Counts[_commits])
 					b, _ := strconv.Atoi(stats[j].Counts[_commits])
@@ -304,7 +304,7 @@ func sortStats(sortBy string, stats []Stats) []Stats {
 				},
 			)
 		case "additions":
-			sort.Slice(stats,
+			sort.SliceStable(stats,
 				func(i, j int) bool {
 					a, _ := strconv.Atoi(stats[i].Counts[_additions])
 					b, _ := strconv.Atoi(stats[j].Counts[_additions])
@@ -312,7 +312,7 @@ func sortStats(sortBy string, stats []Stats) []Stats {
 				},
 			)
 		case "deletions":
-			sort.Slice(stats,
+			sort.SliceStable(stats,
 				func(i, j int) bool {
 					a, _ := strconv.Atoi(stats[i].Counts[_deletions])
 					b, _ := strconv.Atoi(stats[j].Counts[_deletions])
@@ -320,7 +320,7 @@ func sortStats(sortBy string, stats []Stats) []Stats {
 				},
 			)
 		case "files":
-			sort.Slice(stats,
+			sort.SliceStable(stats,
 				func(i, j int) bool {
 					a, _ := strconv.Atoi(stats[i].Counts[_files])
 					b, _ := strconv.Atoi(stats[j].Counts[_files])
