@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -18,6 +19,11 @@ const (
 	_deletions = "Deletions"
 	_commits   = "Commits"
 	_files     = "Files"
+
+	_outputUsage  = "output type: csv/json/table (default is table)"
+	_mergeIDUsage = "merge contributor stats with same email username"
+	_sortByUsage  = `sort by: commits,additions,deletions,files (default is commits)
+		accepts multiple values as comma separated values`
 )
 
 var (
@@ -33,10 +39,14 @@ type Stats struct {
 
 func main() {
 	var outputType string
-	flag.StringVar(&outputType, "output", "table", "output type: csv/json/table (default is table)")
-	flag.StringVar(&outputType, "o", "table", "output type: csv/json/table (default is table)")
+	flag.StringVar(&outputType, "output", "table", _outputUsage)
+	flag.StringVar(&outputType, "o", "table", _outputUsage)
 
-	mergeNameFlag := flag.Bool("merge-name", false, "merge contributor stats with same email username")
+	mergeNameFlag := flag.Bool("merge-name", false, _mergeIDUsage)
+
+	var sortBy string
+	flag.StringVar(&sortBy, "sort-by", "commits", _sortByUsage)
+	flag.StringVar(&sortBy, "s", "commits", _sortByUsage)
 
 	flag.Usage = func() {
 		fmt.Printf("Print the stats of all contributors of a git repository.\n")
@@ -44,14 +54,21 @@ func main() {
 		fmt.Printf("Usage:\n\n\t%v\n\n", "gitstats [options]")
 		fmt.Println(`The options are:
 	-output, -o
-		output type: csv/json/table (default is table)
+		` + _outputUsage + `
+	-sort-by, -s
+		` + _sortByUsage + `
 
 The flags are:
 	-merge-name
-		merge contributor stats with same email username`)
+		` + _mergeIDUsage)
 	}
 
 	flag.Parse()
+
+	if isGitRepo() == false {
+		fmt.Println("gitstats must be run in a git repository. Type gitstats -h for help.")
+		return
+	}
 
 	stats := findCommits()
 	stats = findContributorStats(stats)
@@ -59,6 +76,8 @@ The flags are:
 	if *mergeNameFlag {
 		stats = mergeNames(stats)
 	}
+
+	stats = sortStats(sortBy, stats)
 
 	switch outputType {
 	case "table":
@@ -70,6 +89,17 @@ The flags are:
 	default:
 		printTable(_headers, stats)
 	}
+}
+
+func isGitRepo() bool {
+	args := []string{"status"}
+	cmd := exec.Command("git", args...)
+	_, err := cmd.CombinedOutput()
+	if err != nil {
+		return false
+	}
+
+	return true
 }
 
 func printCSV(headers []string, stats []Stats) {
@@ -258,4 +288,47 @@ func findUserName(nameEmail string) string {
 	parts := strings.Split(strings.TrimSpace(nameEmail), "<")
 	parts = strings.Split(strings.TrimSpace(parts[1]), "@")
 	return strings.ToLower(strings.TrimSpace(parts[0]))
+}
+
+func sortStats(sortBy string, stats []Stats) []Stats {
+	sortFields := strings.Split(sortBy, ",")
+
+	for _, v := range sortFields {
+		switch v {
+		case "commits":
+			sort.Slice(stats,
+				func(i, j int) bool {
+					a, _ := strconv.Atoi(stats[i].Counts[_commits])
+					b, _ := strconv.Atoi(stats[j].Counts[_commits])
+					return a > b
+				},
+			)
+		case "additions":
+			sort.Slice(stats,
+				func(i, j int) bool {
+					a, _ := strconv.Atoi(stats[i].Counts[_additions])
+					b, _ := strconv.Atoi(stats[j].Counts[_additions])
+					return a > b
+				},
+			)
+		case "deletions":
+			sort.Slice(stats,
+				func(i, j int) bool {
+					a, _ := strconv.Atoi(stats[i].Counts[_deletions])
+					b, _ := strconv.Atoi(stats[j].Counts[_deletions])
+					return a > b
+				},
+			)
+		case "files":
+			sort.Slice(stats,
+				func(i, j int) bool {
+					a, _ := strconv.Atoi(stats[i].Counts[_files])
+					b, _ := strconv.Atoi(stats[j].Counts[_files])
+					return a > b
+				},
+			)
+		}
+	}
+
+	return stats
 }
