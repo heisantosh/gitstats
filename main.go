@@ -292,6 +292,7 @@ func findUserName(nameEmail string) string {
 func sortStats(sortBy string, stats []Stats) []Stats {
 	sortFields := strings.Split(sortBy, ",")
 
+	// last one wins
 	for _, v := range sortFields {
 		switch v {
 		case "commits":
