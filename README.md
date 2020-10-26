@@ -3,6 +3,7 @@ A CLI wrapper around git commands to get contributors stats of a repo for all br
 
 ## Usage
 Supported output formats are table/JSON/CSV. Default output format is table.
+Stats can be sorted by commits, additions, deletions.
 
 ### Example
 Running for a local copy of https://github.com/nshepperd/gpt-2.git.
@@ -93,6 +94,11 @@ $ gitstats -o table
 | stephan orlowsky                               |       1 |         6 |         0 |     1 |
 | <stephan.orlowsky@aperto.com>                  |         |           |           |       |
 +------------------------------------------------+---------+-----------+-----------+-------+
+```
+
+To sort by commits, then by files
+```bash
+$ gitstats -sort-by=commits,files
 ```
 
 ## Installation
