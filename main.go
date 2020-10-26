@@ -22,8 +22,7 @@ const (
 
 	_outputUsage  = "output type: csv/json/table (default is table)"
 	_mergeIDUsage = "merge contributor stats with same email username"
-	_sortByUsage  = `sort by: commits,additions,deletions,files (default is commits)
-		accepts multiple values as comma separated values`
+	_sortByUsage  = `sort by: commits,additions,deletions,files (default is commits)`
 )
 
 var (

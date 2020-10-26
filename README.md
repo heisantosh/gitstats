@@ -98,7 +98,7 @@ $ gitstats -o table
 
 To sort by commits, then by files
 ```bash
-$ gitstats -sort-by=commits,files
+$ gitstats -sort-by=commits
 ```
 
 ## Installation
